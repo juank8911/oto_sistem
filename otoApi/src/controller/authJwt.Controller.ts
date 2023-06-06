@@ -7,6 +7,8 @@ const IUsuarioController = require('../interfaces/Usuario.interface');
 import UsuarioController from '../controller/UsuarioController';
 import Usuario from '../models/Usuario.model'
 import router from '../routes/Usuario.routes';
+import { IUsuarioController } from '../interfaces/Usuario.interface';
+
 
 dotenv.config();
 
@@ -52,10 +54,10 @@ export class AuthJwtController {
                             // Simular la comparación de contraseñas utilizando bcrypt
                             console.log('de auth -----despues cre US------------------------------------------------');
                         const isPasswordMatch = bcrypt.compareSync(password, user.password);
-                        console.log('de auth -------------------pasword machted----------------------------------');
+                        console.log('de auth -------------------pasword machted----------------------------------'+' '+isPasswordMatch);
                         if (!isPasswordMatch) {
                             // Si las contraseñas no coinciden, enviar una respuesta de error
-                            res.status(401).send({ error: 'Credenciales inválidas' });
+                            res.status(401).send({isLoggedIn:false, error: 'Credenciales inválidas' });
                             console.log('de auth ----------------invalidas-------------------------------------');
                           }   
                           else
@@ -68,16 +70,16 @@ export class AuthJwtController {
                             // Enviar el token en la respuesta
                             console.log(token)    
      
-                            res.status(200).json({ token, ok:true });
+                            res.status(200).json({ token:token,isLoggedIn:true });
                           }     
 
                         }
                       else{
-                        res.status(500).send({msj:'usuario no encontrado', find:false})
+                        res.status(500).send({msj:'usuario no encontrado',isLoggedIn:false ,find:false})
                       }})
     } catch (error) {
       // Manejar errores
-      res.status(500).json({ error: 'Error al iniciar sesión' });
+      res.status(500).json({isLoggedIn:false, error: 'Error al iniciar sesión' });
     }
   }
 
@@ -112,7 +114,6 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
     const cookieHeader = req.headers.cookie;
     if (cookieHeader) {
       // Acceder y manejar las cookies aquí
-      console.log('autenticando error antes')
       console.log(cookieHeader)
       const { token } = req.cookies;
       console.log(jwt.verify(token, SECRET_KEY))
@@ -138,7 +139,7 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
         Usuario.findById(user._id).
               then(user=>{
                 console.log('usuario de autorizacion');
-                 console.log(user);
+                 console.log(user?.userName);
                  if(user){next()}else{
                 res.status(401).json({ error: 'Unauthorized' });
               }})
@@ -155,43 +156,94 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
 }
 
   // Método para proteger una ruta y verificar el token JWT
-  async isLogin(req: Request, res: Response): Promise<void> {
-    try {
-      var authorizationHeader:any;
 
-      console.log(req.headers)
-      // Obtener el token JWT del encabezado de la solicitud
-      if(!req.headers.authorization){
-      authorizationHeader = req.headers.authorization
-    }
-    else{
-      authorizationHeader = req.headers.cookie
-      authorizationHeader = authorizationHeader.split('=')[2]
-      console.log(authorizationHeader)
-    }
 
-      if (!authorizationHeader) {
-        throw new Error('Token no encontrado');
-      }
-      const token = authorizationHeader.split(' ')[1];
-    
-      // Verificar y decodificar el token
-      if (!token) {
-        throw new Error('Token inválido');
-      }
-      const decodedToken = jwt.verify(token, SECRET_KEY);
-      console.log(decodedToken);
-     // var usuario = usuarioController.obtenerUsuarioPorId()
-      // Verificar si el token es válido
-        //res.status(200).json(islogin:true, )
-      // Realizar acciones adicionales necesarias para la ruta protegida
-    
-      // Pasar al siguiente middleware o controlador
-    } catch (err) {
-      // Manejar errores
-      throw err;
-      res.status(401).send({ error: err || 'Error al procesar el token' });
+
+async isLogin(req: Request, res: Response):Promise<void> {
+  var IsLoged = false;
+  var decodedToken:any;
+  try {
+    var cookieHeader;
+    console.log(req.headers)
+    console.log('isLogin-------------1---------------------------------------------------')
+    if(req.headers.authorization)
+    {
+      
+      console.log('isLogin----------2------------------------------------------------------')
+      cookieHeader = req.headers.authorization;
     }
+      // console.log(cookieHeader);
+    if (cookieHeader) {
+      // Acceder y manejar las cookies aquí
+      // cookieHeader = cookieHeader?.split(' ')[1];
+      console.log('isLogin----------------------------------------------------------------')
+      // console.log(req)
+      const token = cookieHeader;
+      console.log(token);
+       decodedToken = await jwt.decode(token.replace('Bearer ', '')) as {user:{
+        _id: string,
+        nombres: string,
+          apellidos: string,
+          userName:string,
+          tel: number,
+       }}
+       console.log(decodedToken.user)
+          var user = decodedToken.user;
+          console.log('buscanod usuario')
+          console.log(user._id)
+       var usuario: IUsuarioController | null = await Usuario.findById(user._id);
+       console.log(usuario);
+      //  const usuario: IUsuarioController | null = await Usuario.findById(user._id);
+      var usue = new Usuario(usuario);
+      console.log('----------------usue-----------------');
+      console.log(usue);
+       console.log('---------------------------------------------');
+              if(usue)
+              {
+                var resp = {
+                  usue,
+                  isloggedIn: true,
+                  pruabe:'1234'
+                }
+                console.log(resp);
+                res.status(200).send(resp);   
+               }
+               else
+               {
+                res.status(200).send({usaurio:null, isLoggedIn: false })   
+               }           
+                
+              
+                // .
+              // then(userFi =>{ 
+              //   console.log(userFi?.nombres);
+              //    if(userFi){                                   
+              //     IsLoged = true;
+              //     console.log(userFi.nombres, IsLoged);
+              //     console.log('usuario de autoizacion-------------if 1-----------------------'); 
+              //     res.status(200).send({userName: userFi.userName, IsLogedIn: true});
+              //     console.log('usuario de autoizacion------------------------------------'); 
+              //     return true;
+                  
+              //   }else{
+                  
+              //     console.log('usuario de autoizacion------------else 1------------------------'); 
+                
+              //   res.status(401).json({ IsLoged:IsLoged , error: 'Unauthorized' });
+              // }})
+      
+    } else {
+      // No se encontraron cookies en la solicitud
+      console.log('usuario de autoizacion------------else 2------------------------'); 
+      res.status(401).json({ IsLoged:IsLoged, error: 'Unauthorized' });
+    }
+      
+  } catch (error) {
+    console.log('usuario de autoizacion------------catch------------------------'); 
+
+    res.status(430).json({ IsLoged:IsLoged,error: error });
+    throw error; 
   }
-  
+}
+
 }
