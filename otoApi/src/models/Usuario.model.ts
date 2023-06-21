@@ -1,7 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUsuario extends Document {
-  id: string;
   nombres: string;
   apellidos: string;
   userName: string;
@@ -16,13 +15,7 @@ export interface IUsuario extends Document {
 const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const usuarioSchema = new Schema({
-  id: { 
-    type: String
-    ,required: true
-    ,unique: true
-    ,default: () => new mongoose.Types.ObjectId().toString() 
-  }
-  ,nombres: {
+ nombres: {
     type: String,
     required: true
   },
