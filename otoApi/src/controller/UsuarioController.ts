@@ -17,6 +17,44 @@ class UsuarioController implements IUsuarioController {
         }
       }
 
+      
+
+public async obtenerUsuarioPorToken(req: Request, res: Response): Promise<void> {
+  try {
+    console.log('----------------------------------------------------');
+    console.log('Obtener');
+    console.log(req.headers.authorization);
+    const token = req.headers.authorization;
+    if (!token) {
+      res.status(401).send({ error: 'No se proporcionó un token de autorización' });
+      return;
+    }
+
+    // Decodificar el token para obtener el ID del usuario
+    const decodedToken: any = jwt.verify(token.replace('Bearer ',''), configs.jwt_secreto); // Aquí debes reemplazar 'secreto' con tu clave secreta real
+    console.log('****************************************************************')
+    console.log(decodedToken)
+    console.log(decodedToken.user._id)
+    // Buscar al usuario por su ID en la base de datos
+    const usuario: IUsuario | null = await Usuario.findById(decodedToken.user._id);
+    console.log('-----------------------------usuario--------------------------------------------------------')
+    console.log(usuario)
+    if (!usuario) {
+      res.status(404).send({ error: 'No se encontró el usuario' });
+      return;
+    }
+    console.log(usuario)
+
+    // Enviar solo el objeto de usuario en la respuesta
+    // console.log(res.status(200).send(usuario));
+    res.status(200).send(usuario);
+  } catch (error) {
+    res.status(500).send({ error: 'Error al obtener el usuario' + error });
+  }
+}
+
+
+
       public async obtenerLogin(userName: string, password: string): Promise<any> {
         try {
           console.log('usuario obtener');

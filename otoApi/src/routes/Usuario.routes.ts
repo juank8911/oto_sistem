@@ -11,9 +11,11 @@ const usuarioController: typeof IUsuarioController = new UsuarioController();
 const authJwtController: typeof IAuthJwtController = new AuthJwtController();
 
 router.get('/',usuarioController.obtenerUsuarios);
+router.get('/tok/:tk', usuarioController.obtenerUsuarioPorToken)
 router.get('/:id',authJwtController.isAuthenticated, usuarioController.obtenerUsuarioPorId);
 router.post('/', usuarioController.crearUsuario);
 router.put('/:id', usuarioController.actualizarUsuario);
 router.delete('/:id', usuarioController.eliminarUsuario);
+
 
 export default router;

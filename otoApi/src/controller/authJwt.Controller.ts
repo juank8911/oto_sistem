@@ -39,6 +39,7 @@ export class AuthJwtController {
   // Método para iniciar sesión y generar un token JWT
   async login(req: Request, res: Response): Promise<void> {
     try {
+      console.log('validadono login');
       // Obtener los datos del usuario desde el cuerpo de la solicitud
       const { userName, password } = req.body;
       // Verificar las credenciales del usuario en la base de datos (o cualquier otra acción necesaria)
@@ -82,6 +83,7 @@ export class AuthJwtController {
       res.status(500).json({isLoggedIn:false, error: 'Error al iniciar sesión' });
     }
   }
+  
 
 /*  async isAuthenticated(req: Request,res: Response,next:NextFunction){
     try {
@@ -106,11 +108,13 @@ export class AuthJwtController {
     }
 }
 */
+
+
 async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
 {
  
   try {
- 
+    console.log('isAuthenticated');
     const cookieHeader = req.headers.cookie;
     if (cookieHeader) {
       // Acceder y manejar las cookies aquí
@@ -128,7 +132,6 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
           correo: string
           password: string,
           saltRounds: number,
-          id: string,
           __v:number
           }}
       console.log(decodedToken);
@@ -203,14 +206,15 @@ async isLogin(req: Request, res: Response):Promise<void> {
                 var resp = {
                   usue,
                   isloggedIn: true,
-                  pruabe:'1234'
                 }
+                console.log('respuestaaaa');
                 console.log(resp);
-                res.status(200).send(resp);   
+                res.status(200).json(resp);   
+                return;
                }
                else
                {
-                res.status(200).send({usaurio:null, isLoggedIn: false })   
+                res.status(303).json({usaurio:null, isLoggedIn: false })   
                }           
                 
               
