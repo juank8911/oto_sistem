@@ -1,8 +1,36 @@
 import { Request, Response } from 'express';
 import { IPetController } from '../interfaces/Pet.Interface';
 import Pet from '../models/Pets.models';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
 
+interface CustomRequest extends Request {
+  user?: any;
+}
 export class PetController implements IPetController {
+
+ async ObtenerMascotasUsuario(req: CustomRequest, res: Response): Promise<void> {
+    // console.log(req)
+    // console.log(req.user)
+    try {
+      if(req?.user)
+      {
+        console.log(req.user._id)
+        const mascotas = await Pet.find({propietario: req.user._id});
+        if(mascotas)
+        {
+          console.log(mascotas);
+          res.status(200).send(mascotas)
+        }
+      }
+    }catch (error) {
+      res.status(500).send(error);
+      throw error;
+    }
+    // throw new Error('Method not implemented.');
+   
+    
+  }
   async obtenerMascotas(req: Request, res: Response): Promise<void> {
     try {
       const mascotas = await Pet.find();

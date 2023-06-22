@@ -15,7 +15,9 @@ dotenv.config();
 const SECRET_KEY = configs.jwt_secreto ;
 console.log(SECRET_KEY)
 const usuarioController: typeof IUsuarioController = new UsuarioController();
-
+interface CustomRequest extends Request {
+  user?: any;
+}
 export class AuthJwtController {
   // Método para registrar un usuario
   async register(req: Request, res: Response): Promise<void> {
@@ -110,30 +112,21 @@ export class AuthJwtController {
 */
 
 
-async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
+async isAuthenticated(req:CustomRequest,res:Response,next:NextFunction):Promise<any>
 {
  
   try {
     console.log('isAuthenticated');
-    const cookieHeader = req.headers.cookie;
-    if (cookieHeader) {
+    console.log(req.headers.authorization);
+    if (req?.headers?.authorization) {
+      const token = req.headers.authorization.replace('Bearer ', '');
+    
+    if (token) {
       // Acceder y manejar las cookies aquí
-      console.log(cookieHeader)
-      const { token } = req.cookies;
-      console.log(jwt.verify(token, SECRET_KEY))
-      const decodedToken = jwt.verify(token, SECRET_KEY) as { user: { 
-        _id: string,
-        nombres: string,
-          apellidos: string,
-          userName:string,
-          tel: number,
-          fechaNacimiento: Date,
-          genero: string,
-          correo: string
-          password: string,
-          saltRounds: number,
-          __v:number
-          }}
+      // console.log(cookieHeader)
+      // const { token } = req.cookies;
+    // console.log(jwt.verify(token, SECRET_KEY))
+    const decodedToken: any = jwt.verify(token.replace('Bearer ',''), configs.jwt_secreto); // Aquí debes reemplazar 'secreto' con tu clave secreta real
       console.log(decodedToken);
       
       const user = decodedToken.user;
@@ -143,7 +136,9 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
               then(user=>{
                 console.log('usuario de autorizacion');
                  console.log(user?.userName);
-                 if(user){next()}else{
+                 if(user){
+                  req.user = user;
+                  next()}else{
                 res.status(401).json({ error: 'Unauthorized' });
               }})
       
@@ -151,7 +146,7 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
       // No se encontraron cookies en la solicitud
       console.log('else')
     }
-      
+  }
   } catch (error) {
     throw error;
      return  error; 
@@ -162,7 +157,7 @@ async isAuthenticated(req:Request,res:Response,next:NextFunction):Promise<any>
 
 
 
-async isLogin(req: Request, res: Response):Promise<void> {
+async isLogin(req: CustomRequest, res: Response):Promise<void> {
   var IsLoged = false;
   var decodedToken:any;
   try {
@@ -209,6 +204,7 @@ async isLogin(req: Request, res: Response):Promise<void> {
                 }
                 console.log('respuestaaaa');
                 console.log(resp);
+                req.user = resp;
                 res.status(200).json(resp);   
                 return;
                }
